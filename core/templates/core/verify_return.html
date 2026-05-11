@@ -1,0 +1,48 @@
+
+
+
+{% extends "core/base_dashboard.html" %}
+
+{% block content %}
+<div style="max-width: 600px; margin: 0 auto;">
+    <div style="text-align: center; margin-bottom: 30px;">
+        <h1>Verify Return</h1>
+        <p>Enter the code from the customer's phone to verify authorization.</p>
+    </div>
+
+    <div class="panel" style="margin-bottom: 24px;">
+        <form method="POST" style="display: flex; gap: 10px;">
+            {% csrf_token %}
+            <input type="text" name="return_code" placeholder="Enter Return Code (e.g. RET-123)..." required
+                   style="flex:1; padding:15px; border-radius:8px; border:2px solid #ddd; font-size: 16px;">
+            <button type="submit" style="background:var(--accent); color:white; border:none; padding:0 25px; border-radius:8px; font-weight:600; cursor:pointer;">
+                Verify
+            </button>
+        </form>
+    </div>
+
+    {% if result %}
+        <div class="panel" style="border: 2px solid {% if result.status == 'approved' %}var(--success){% else %}var(--danger){% endif %};">
+            <div style="text-align: center; margin-bottom: 20px;">
+                <span style="font-size: 48px;">
+                    {% if result.status == 'approved' %}✅{% else %}❌{% endif %}
+                </span>
+                <h2 style="margin:10px 0;">Return {{ result.status|upper }}</h2>
+            </div>
+
+            <div style="background: #f8fafc; padding: 15px; border-radius: 8px;">
+                <p><strong>Customer:</strong> {{ result.requester.full_name }}</p>
+                <p><strong>Product:</strong> {{ result.product.name }}</p>
+                <p><strong>Approved Date:</strong> {{ result.updated_at|date:"M d, Y" }}</p>
+                <p><strong>Reason:</strong> {{ result.reason }}</p>
+            </div>
+
+            {% if result.status == 'approved' %}
+                <button style="width:100%; margin-top:20px; padding:15px; background:var(--success); color:white; border:none; border-radius:8px; font-weight:700; cursor:pointer;">
+                    PROCESS REFUND / EXCHANGE
+                </button>
+            {% endif %}
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

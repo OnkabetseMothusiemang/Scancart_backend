@@ -1,0 +1,65 @@
+{% extends "core/base_dashboard.html" %}
+
+{% block title %}Store Inventory — {{ branch.name }}{% endblock %}
+
+{% block content %}
+<div style="margin-bottom: 24px;">
+    <h1 style="margin:0;">Store Inventory</h1>
+    <p style="color: var(--muted);">Stock levels for branch: <strong>{{ branch.name }} ({{ branch.town }})</strong></p>
+</div>
+
+<div class="panel">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+        <h3 style="margin:0;">Available Products</h3>
+        <span style="background: #f1f5f9; padding: 6px 12px; border-radius: 20px; font-size: 12px; font-weight: 600;">
+            Total Items: {{ inventory.count }}
+        </span>
+    </div>
+
+    <table style="width:100%; border-collapse: collapse;">
+        <thead>
+            <tr style="text-align:left; border-bottom:2px solid #f1f5f9;">
+                <th style="padding:12px; color:#64748b;">Product Name</th>
+                <th style="padding:12px; color:#64748b;">Barcode</th>
+                <th style="padding:12px; color:#64748b;">Unit Price</th>
+                <th style="padding:12px; color:#64748b;">Shelf Stock</th>
+                <th style="padding:12px; color:#64748b;">Status</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in inventory %}
+            <tr style="border-bottom:1px solid #f1f5f9;">
+                <td style="padding:12px;">
+                    <strong>{{ item.product.name }}</strong>
+                </td>
+                <td style="padding:12px; font-family: monospace; color: #64748b;">
+                    {{ item.product.barcode }}
+                </td>
+                <td style="padding:12px; font-weight: 600;">
+                    R {{ item.product.price }}
+                </td>
+                <td style="padding:12px;">
+                    <span style="font-size: 15px; font-weight: 700;">{{ item.quantity }}</span>
+                    <small style="color: #94a3b8;"> {{ item.product.unit }}</small>
+                </td>
+                <td style="padding:12px;">
+                    {% if item.quantity > 10 %}
+                        <span style="color: #10b981; background: #ecfdf5; padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: 700;">IN STOCK</span>
+                    {% elif item.quantity > 0 %}
+                        <span style="color: #f59e0b; background: #fffbeb; padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: 700;">LOW STOCK</span>
+                    {% else %}
+                        <span style="color: #ef4444; background: #fef2f2; padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: 700;">OUT OF STOCK</span>
+                    {% endif %}
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="5" style="padding:40px; text-align:center; color:#94a3b8;">
+                    No stock has been allocated to this branch yet.
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

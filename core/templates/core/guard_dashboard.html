@@ -1,0 +1,383 @@
+{% extends "core/base_dashboard.html" %}
+{% load static %}
+
+{% block title %}Guard Dashboard{% endblock %}
+
+{% block sidebar %}
+
+<a href="#" class="active">
+  <span class="icon">🛡️</span>
+  <span>Guard Dashboard</span>
+</a>
+
+<div class="nav-label">Security</div>
+
+<a href="#" onclick="openScan()">
+  <span class="icon">📷</span>
+  <span>Scan Customer QR</span>
+</a>
+
+<a href="#" onclick="openApproved()">
+  <span class="icon">✅</span>
+  <span>Approved Exits</span>
+</a>
+
+<a href="#" onclick="openFlagged()">
+  <span class="icon">⚠️</span>
+  <span>Flagged Customers</span>
+</a>
+
+<div class="nav-label">Account</div>
+
+<a href="#" onclick="openProfile()">
+  <span class="icon">👤</span>
+  <span>My Profile</span>
+</a>
+
+<div class="sidebar-footer">
+  <a href="{% url 'logout' %}" class="logout-btn">
+    <span class="icon">🚪</span>
+    <span><strong>Logout</strong></span>
+  </a>
+</div>
+
+{% endblock %}
+
+{% block content %}
+
+<div class="panel">
+<h2>Guard Security Panel</h2>
+<p>Scan customer QR codes to verify purchases before they leave the store.</p>
+</div>
+
+<br>
+
+<div class="panel">
+<h3>Quick Actions</h3>
+
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:20px;margin-top:15px;">
+
+<div class="action-card" onclick="openScan()">
+<div class="emoji">📷</div>
+<h4>Scan Customer QR</h4>
+<p>Verify purchases</p>
+</div>
+
+<div class="action-card" onclick="openApproved()">
+<div class="emoji">✅</div>
+<h4>Approved Exits</h4>
+<p>View verified customers</p>
+</div>
+
+<div class="action-card" onclick="openFlagged()">
+<div class="emoji">⚠️</div>
+<h4>Flagged Customers</h4>
+<p>Suspicious activity</p>
+</div>
+
+</div>
+</div>
+
+<style>
+
+.action-card{
+background:#f8fafc;
+padding:20px;
+border-radius:12px;
+text-align:center;
+border:1px solid #e2e8f0;
+cursor:pointer;
+}
+
+.action-card:hover{
+background:#eef2ff;
+}
+
+.emoji{
+font-size:28px;
+}
+
+.modal{
+display:none;
+position:fixed;
+top:0;
+left:0;
+width:100%;
+height:100%;
+background:rgba(0,0,0,0.6);
+align-items:center;
+justify-content:center;
+z-index:999;
+}
+
+.modal-box{
+background:white;
+padding:25px;
+border-radius:12px;
+width:450px;
+max-width:90%;
+}
+
+button{
+padding:10px 16px;
+border:none;
+border-radius:8px;
+cursor:pointer;
+margin-top:10px;
+}
+
+.approve-btn{
+background:#10b981;
+color:white;
+}
+
+.reject-btn{
+background:#ef4444;
+color:white;
+}
+
+.close-btn{
+background:#64748b;
+color:white;
+}
+
+</style>
+
+{% endblock %}
+
+
+
+{% block body_extra %}
+
+<script src="https://unpkg.com/html5-qrcode"></script>
+
+<!-- SCAN MODAL -->
+
+<div id="scanModal" class="modal">
+<div class="modal-box">
+
+<h3>Scan Customer QR</h3>
+
+<div id="reader" style="width:100%"></div>
+
+<div id="scanResult" style="margin-top:15px;display:none">
+
+<h4>Customer Purchase</h4>
+
+<p><strong>Name:</strong> <span id="customerName"></span></p>
+<p><strong>Items:</strong> <span id="itemCount"></span></p>
+<p><strong>Total:</strong> R<span id="totalAmount"></span></p>
+
+<div id="itemsList"></div>
+
+<button class="approve-btn" onclick="approveExit()">Approve Exit</button>
+<button class="reject-btn" onclick="rejectExit()">Reject</button>
+
+</div>
+
+<br>
+
+<button class="close-btn" onclick="closeModal('scanModal')">Close</button>
+
+</div>
+</div>
+
+
+<!-- APPROVED MODAL -->
+
+<div id="approvedModal" class="modal">
+<div class="modal-box">
+
+<h3>Approved Customers</h3>
+
+<div id="approvedList">
+Loading...
+</div>
+
+<button class="close-btn" onclick="closeModal('approvedModal')">Close</button>
+
+</div>
+</div>
+
+
+<!-- FLAGGED MODAL -->
+
+<div id="flaggedModal" class="modal">
+<div class="modal-box">
+
+<h3>Flagged Customers</h3>
+
+<div id="flaggedList">
+Loading...
+</div>
+
+<button class="close-btn" onclick="closeModal('flaggedModal')">Close</button>
+
+</div>
+</div>
+
+
+<!-- PROFILE MODAL -->
+
+<div id="profileModal" class="modal">
+<div class="modal-box">
+
+<h3>My Profile</h3>
+
+<p><strong>Name:</strong> {{ user.username }}</p>
+<p><strong>Email:</strong> {{ user.email }}</p>
+<p><strong>Role:</strong> {{ user.get_role_display }}</p>
+
+<button class="close-btn" onclick="closeModal('profileModal')">Close</button>
+
+</div>
+</div>
+
+
+
+<script>
+
+let scanner
+let scannedCode = null
+
+
+function openScan(){
+
+document.getElementById("scanModal").style.display="flex"
+
+scanner = new Html5Qrcode("reader")
+
+scanner.start(
+{ facingMode: "environment" },
+{ fps:10, qrbox:250 },
+onScanSuccess
+)
+
+}
+
+
+function onScanSuccess(qrCodeMessage){
+
+scannedCode = qrCodeMessage
+
+scanner.stop()
+
+fetch("/api/guard/verify-cart/",{
+method:"POST",
+headers:{
+"Content-Type":"application/json",
+"X-CSRFToken":"{{ csrf_token }}"
+},
+body:JSON.stringify({qr:qrCodeMessage})
+})
+.then(res=>res.json())
+.then(data=>{
+
+document.getElementById("scanResult").style.display="block"
+
+document.getElementById("customerName").innerText=data.customer
+document.getElementById("itemCount").innerText=data.items_count
+document.getElementById("totalAmount").innerText=data.total
+
+let list=""
+
+data.items.forEach(item=>{
+list+=`<p>${item.name} x${item.qty}</p>`
+})
+
+document.getElementById("itemsList").innerHTML=list
+
+})
+
+}
+
+
+function approveExit(){
+
+fetch("/api/guard/approve-exit/",{
+method:"POST",
+headers:{
+"Content-Type":"application/json",
+"X-CSRFToken":"{{ csrf_token }}"
+},
+body:JSON.stringify({qr:scannedCode,approved:true})
+})
+
+alert("Exit Approved")
+
+closeModal("scanModal")
+
+}
+
+
+function rejectExit(){
+
+fetch("/api/guard/approve-exit/",{
+method:"POST",
+headers:{
+"Content-Type":"application/json",
+"X-CSRFToken":"{{ csrf_token }}"
+},
+body:JSON.stringify({qr:scannedCode,approved:false})
+})
+
+alert("Customer flagged")
+
+closeModal("scanModal")
+
+}
+
+
+function openApproved(){
+
+document.getElementById("approvedModal").style.display="flex"
+
+fetch("/api/guard/approved-list/")
+.then(res=>res.json())
+.then(data=>{
+
+let html=""
+
+data.forEach(c=>{
+html+=`<p>${c.customer} - R${c.total}</p>`
+})
+
+document.getElementById("approvedList").innerHTML=html
+
+})
+
+}
+
+
+function openFlagged(){
+
+document.getElementById("flaggedModal").style.display="flex"
+
+fetch("/api/guard/flagged-list/")
+.then(res=>res.json())
+.then(data=>{
+
+let html=""
+
+data.forEach(c=>{
+html+=`<p>${c.customer}</p>`
+})
+
+document.getElementById("flaggedList").innerHTML=html
+
+})
+
+}
+
+
+function openProfile(){
+document.getElementById("profileModal").style.display="flex"
+}
+
+function closeModal(id){
+document.getElementById(id).style.display="none"
+}
+
+</script>
+
+{% endblock %}

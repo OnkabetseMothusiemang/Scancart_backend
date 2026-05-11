@@ -1,0 +1,1 @@
+# ScanCart Pro Django Backend

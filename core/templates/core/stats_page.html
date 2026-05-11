@@ -1,0 +1,52 @@
+
+{% extends "core/base_dashboard.html" %}
+
+{% block content %}
+<div style="margin-bottom: 24px;">
+    <h1>Company Performance</h1>
+    <p style="color: var(--muted);">Global overview of all branches and revenue.</p>
+</div>
+
+<div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-bottom: 30px;">
+    <div class="panel" style="border-left: 5px solid var(--accent);">
+        <h4 style="margin:0; color: var(--muted);">Total Revenue</h4>
+        <h2 style="margin:10px 0 0 0; font-size: 28px;">R {{ total_revenue|floatformat:2 }}</h2>
+    </div>
+    <div class="panel" style="border-left: 5px solid var(--success);">
+        <h4 style="margin:0; color: var(--muted);">Total Branches</h4>
+        <h2 style="margin:10px 0 0 0; font-size: 28px;">{{ branch_performance|length }}</h2>
+    </div>
+    <div class="panel" style="border-left: 5px solid #8b5cf6;">
+        <h4 style="margin:0; color: var(--muted);">Active Specials</h4>
+        <h2 style="margin:10px 0 0 0; font-size: 28px;">Global Overview</h2>
+    </div>
+</div>
+
+<div class="panel">
+    <h3>Branch Comparison</h3>
+    <table style="width:100%; border-collapse: collapse;">
+        <thead>
+            <tr style="text-align:left; border-bottom:2px solid #f1f5f9;">
+                <th style="padding:12px;">Branch Name</th>
+                <th style="padding:12px;">Total Sales</th>
+                <th style="padding:12px;">Revenue Generated</th>
+                <th style="padding:12px;">Efficiency</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for branch in branch_performance %}
+            <tr style="border-bottom:1px solid #f1f5f9;">
+                <td style="padding:12px;"><strong>{{ branch.name }}</strong></td>
+                <td style="padding:12px;">{{ branch.sales_count }} sales</td>
+                <td style="padding:12px; font-weight: 600;">R {{ branch.revenue|floatformat:2 }}</td>
+                <td style="padding:12px;">
+                    <div style="width:100%; background:#f1f5f9; height:8px; border-radius:4px;">
+                        <div style="width: 75%; background:var(--accent); height:100%; border-radius:4px;"></div>
+                    </div>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

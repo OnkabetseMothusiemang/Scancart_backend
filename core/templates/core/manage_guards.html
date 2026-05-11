@@ -1,0 +1,135 @@
+{% extends "core/base_dashboard.html" %}
+{% block title %}Manage Guards{% endblock %}
+
+{% block content %}
+
+<div class="panel">
+
+    <h2 style="margin-bottom: 4px;">
+        {{ branch.company.company_name }} : Guards
+    </h2>
+    <p style="color: var(--muted); margin-top: 0;">
+        Add and manage security staff for this location.
+    </p>
+
+    <hr style="margin: 20px 0; border: none; border-top: 1px solid #e2e8f0;">
+
+    <!-- ================= Add New Guard ================= -->
+    <h3 style="margin-bottom: 12px;">Add New Guard</h3>
+
+    <form method="POST" style="display: grid; gap: 16px; max-width: 500px;">
+        {% csrf_token %}
+
+        <!-- Company Name (Optional) -->
+        <div>
+            <label>Company Name (Optional)</label>
+            <input type="text" name="company_name"
+                   placeholder="e.g. Warrenton Spar"
+                   style="width:100%; padding:10px; border-radius:8px;
+                          border:1px solid #cbd5e1;">
+        </div>
+
+        <!-- Username -->
+        <div>
+            <label>Username</label>
+            <input type="text" name="username"
+                   placeholder="e.g. guard_john"
+                   required
+                   style="width:100%; padding:10px; border-radius:8px;
+                          border:1px solid #cbd5e1;">
+        </div>
+
+        <!-- Full Name -->
+        <div>
+            <label>Guard Full Name</label>
+            <input type="text" name="full_name"
+                   placeholder="e.g. John Mokoena"
+                   required
+                   style="width:100%; padding:10px; border-radius:8px;
+                          border:1px solid #cbd5e1;">
+        </div>
+
+        <!-- Email -->
+        <div>
+            <label>Email (Login)</label>
+            <input type="email" name="email"
+                   placeholder="guard@company.com"
+                   required
+                   style="width:100%; padding:10px; border-radius:8px;
+                          border:1px solid #cbd5e1;">
+        </div>
+
+        <!-- Password -->
+        <div>
+            <label>Password</label>
+            <input type="password" name="password"
+                   placeholder="••••••••"
+                   required
+                   style="width:100%; padding:10px; border-radius:8px;
+                          border:1px solid #cbd5e1;">
+        </div>
+
+        <button type="submit"
+            style="background: var(--accent);
+                   color: white;
+                   padding: 10px;
+                   border: none;
+                   border-radius: 8px;
+                   font-weight: 600;
+                   cursor: pointer;">
+            Register Guard
+        </button>
+    </form>
+
+    <hr style="margin: 30px 0; border: none; border-top: 1px solid #e2e8f0;">
+
+    <!-- ================= Active Guards ================= -->
+    <h3>Active Guards</h3>
+
+    {% if guards %}
+        <table style="width:100%; border-collapse: collapse; margin-top:15px;">
+            <thead>
+                <tr style="background:#f1f5f9; text-align:left;">
+                    <th style="padding:12px;">Company</th>
+                    <th style="padding:12px;">Full Name</th>
+                    <th style="padding:12px;">Username</th>
+                    <th style="padding:12px;">Email</th>
+                    <th style="padding:12px;">Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for guard in guards %}
+                <tr style="border-bottom:1px solid #e2e8f0;">
+                    <td style="padding:12px;">
+                        {{ guard.company_name }}
+                    </td>
+                    <td style="padding:12px;">
+                        {{ guard.full_name }}
+                    </td>
+                    <td style="padding:12px;">
+                        {{ guard.username }}
+                    </td>
+                    <td style="padding:12px;">
+                        {{ guard.email }}
+                    </td>
+                    <td style="padding:12px;">
+                        <a href="{% url 'delete_guard' guard.id %}"
+                           style="color: var(--danger);
+                                  font-weight:600;
+                                  text-decoration:none;">
+                            Remove
+                        </a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p style="color: var(--muted); margin-top:10px;">
+            No guards registered for this branch yet.
+        </p>
+    {% endif %}
+
+</div>
+
+{% endblock %}

@@ -1,0 +1,138 @@
+{% extends "core/base_dashboard.html" %}
+
+{% block title %}Warehouse Inventory — {{ user.assigned_warehouse.name }}{% endblock %}
+
+{% block content %}
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+    <div>
+        <h1 style="margin:0;">Warehouse Inventory</h1>
+        <p style="color: var(--muted);">Managing stock for: <strong>{{ user.assigned_warehouse.name }}</strong></p>
+    </div>
+    <button onclick="document.getElementById('addStockModal').style.display='block'" class="panel" style="background: var(--accent); color: white; border: none; padding: 10px 20px; cursor: pointer; font-weight: 600;">
+        + Receive New Stock
+    </button>
+</div>
+
+<div class="panel">
+    <table style="width:100%; border-collapse: collapse;">
+        <thead>
+            <tr style="text-align:left; border-bottom:2px solid #f1f5f9;">
+                <th style="padding:12px;">Product Details</th>
+                <th style="padding:12px;">Barcode</th>
+                <th style="padding:12px;">Current Quantity</th>
+                <th style="padding:12px;">Last Updated</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in inventory %}
+            <tr style="border-bottom:1px solid #f1f5f9;">
+                <td style="padding:12px;">
+                    <strong>{{ item.product.name }}</strong><br>
+                    <small style="color:#64748b;">{{ item.product.unit }}</small>
+                </td>
+                <td style="padding:12px; font-family: monospace;">{{ item.product.barcode }}</td>
+                <td style="padding:12px;">
+                    <span style="font-size: 16px; font-weight: 700; color: {% if item.quantity < 10 %}var(--danger){% else %}var(--success){% endif %};">
+                        {{ item.quantity }}
+                    </span>
+                </td>
+                <td style="padding:12px; color: var(--muted); font-size: 12px;">
+                    {{ item.last_updated|date:"M d, H:i" }}
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="4" style="padding:40px; text-align:center; color:#94a3b8;">
+                    No stock currently in this warehouse. Click "Receive New Stock" to begin.
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<!-- Receive Stock Modal -->
+<div id="addStockModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:1000; overflow:auto;">
+    <div class="panel" style="width:600px; margin:50px auto; position:relative;">
+        <h3>Receive Stock</h3>
+        <input type="text" id="productSearch" placeholder="Search products..." style="width:100%; padding:10px; margin-bottom:15px; border-radius:8px; border:1px solid #ddd;">
+        
+        <form method="POST" id="receiveStockForm">
+            {% csrf_token %}
+            <table style="width:100%; border-collapse: collapse; max-height:300px; overflow-y:auto; display:block;">
+                <thead>
+                    <tr style="text-align:left; border-bottom:2px solid #f1f5f9; display:flex;">
+                        <th style="padding:8px; width:10%;">Select</th>
+                        <th style="padding:8px; width:40%;">Product</th>
+                        <th style="padding:8px; width:30%;">Barcode</th>
+                        <th style="padding:8px; width:20%;">Quantity</th>
+                    </tr>
+                </thead>
+                <tbody id="productTableBody" style="display:block; max-height:300px; overflow-y:auto;">
+                    {% for p in master_products %}
+                    <tr style="border-bottom:1px solid #f1f5f9; display:flex; align-items:center; padding:5px;">
+                        <td style="width:10%; padding:8px;">
+                            <input type="checkbox" name="product_ids" value="{{ p.id }}" class="productCheckbox">
+                        </td>
+                        <td style="width:40%; padding:8px;">{{ p.name }}</td>
+                        <td style="width:30%; padding:8px; font-family:monospace;">{{ p.barcode }}</td>
+                        <td style="width:20%; padding:8px;">
+                            <input type="number" name="quantity_{{ p.id }}" min="1" value="1" required>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+
+            <div style="display:flex; gap:10px; margin-top:15px;">
+                <button type="submit" style="flex:1; background:var(--accent); color:white; border:none; padding:12px; border-radius:8px; cursor:pointer;">Save Stock</button>
+                <button type="button" onclick="document.getElementById('addStockModal').style.display='none'" style="flex:1; background:#eee; border:none; padding:12px; border-radius:8px; cursor:pointer;">Cancel</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+const searchInput = document.getElementById('productSearch');
+const tableBody = document.getElementById('productTableBody');
+const checkboxes = document.querySelectorAll('.productCheckbox');
+const quantityInputs = document.querySelectorAll('.quantityInput');
+const form = document.getElementById('receiveStockForm');
+
+// Enable quantity input only when checkbox is checked
+checkboxes.forEach((cb, idx) => {
+    cb.addEventListener('change', () => {
+        quantityInputs[idx].disabled = !cb.checked;
+    });
+});
+
+// Filter products by search input (case-insensitive, starts with)
+searchInput.addEventListener('keyup', () => {
+    const filter = searchInput.value.toLowerCase();
+    tableBody.querySelectorAll('tr').forEach(row => {
+        const productName = row.cells[1].innerText.toLowerCase();
+        if(productName.startsWith(filter)) {
+            row.style.display = 'flex';
+        } else {
+            row.style.display = 'none';
+        }
+    });
+});
+
+// Only submit quantities for checked products
+form.addEventListener('submit', (e) => {
+    const checkedProducts = document.querySelectorAll('.productCheckbox:checked');
+    if (checkedProducts.length === 0) {
+        alert("Please select at least one product.");
+        e.preventDefault();
+        return;
+    }
+
+    document.querySelectorAll('.productCheckbox').forEach((cb, idx) => {
+        if (!cb.checked) {
+            quantityInputs[idx].disabled = true;
+        }
+    });
+});
+</script>
+{% endblock %}

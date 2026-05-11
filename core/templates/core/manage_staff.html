@@ -1,0 +1,142 @@
+{% extends "core/base_dashboard.html" %}
+
+{% block title %}Manage Staff — {{ user.company_name }}{% endblock %}
+
+{% block content %}
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+    <h1>Staff Management</h1>
+</div>
+
+<div style="display: grid; grid-template-columns: 400px 1fr; gap: 24px;">
+    
+    <div class="panel">
+        <h3 style="margin-top:0;">Add New Manager</h3>
+        <p style="color: #64748b; font-size: 13px;">Create login credentials for Warehouse or Branch managers.</p>
+        
+        <form method="POST">
+            {% csrf_token %}
+            
+            <div style="margin-bottom:15px;">
+                <label style="display:block; font-size:13px; font-weight:600; color:#64748b; margin-bottom:5px;">Full Name</label>
+                <input type="text" name="full_name" placeholder="e.g. John Doe" required 
+                       style="width:100%; padding:10px; border-radius:8px; border:1px solid #ddd;">
+            </div>
+
+            <div style="margin-bottom:15px;">
+                <label style="display:block; font-size:13px; font-weight:600; color:#64748b; margin-bottom:5px;">Email (Username)</label>
+                <input type="email" name="email" placeholder="manager@company.com" required 
+                       style="width:100%; padding:10px; border-radius:8px; border:1px solid #ddd;">
+            </div>
+
+            <div style="margin-bottom:15px;">
+                <label style="display:block; font-size:13px; font-weight:600; color:#64748b; margin-bottom:5px;">Password</label>
+                <input type="password" name="password" placeholder="••••••••" required 
+                       style="width:100%; padding:10px; border-radius:8px; border:1px solid #ddd;">
+            </div>
+
+            <div style="margin-bottom:15px;">
+                <label style="display:block; font-size:13px; font-weight:600; color:#64748b; margin-bottom:5px;">Role Type</label>
+                <select name="role" id="roleSelect" onchange="toggleLocations()" required 
+                        style="width:100%; padding:10px; border-radius:8px; border:1px solid #ddd;">
+                    <option value="">-- Select Role --</option>
+                    <option value="warehouse">Warehouse Manager</option>
+                    <option value="branch">Branch Manager</option>
+                </select>
+            </div>
+
+            <div id="locationWrapper" style="margin-bottom:20px; display:none;">
+                <label id="locationLabel" style="display:block; font-size:13px; font-weight:600; color:#64748b; margin-bottom:5px;">Assign To</label>
+                
+                <select name="warehouse_id" id="warehouseList" style="width:100%; padding:10px; border-radius:8px; border:1px solid #ddd; display:none;">
+                    <option value="">-- Select Warehouse --</option>
+                    {% for wh in warehouses %}
+                        <option value="{{ wh.id }}">{{ wh.name }}</option>
+                    {% endfor %}
+                </select>
+
+                <select name="branch_id" id="branchList" style="width:100%; padding:10px; border-radius:8px; border:1px solid #ddd; display:none;">
+                    <option value="">-- Select Branch --</option>
+                    {% for br in branches %}
+                        <option value="{{ br.id }}">{{ br.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <button type="submit" style="width:100%; background:#2563eb; color:white; border:none; padding:12px; border-radius:8px; font-weight:600; cursor:pointer;">
+                Create Account
+            </button>
+        </form>
+    </div>
+
+    <div class="panel">
+        <h3 style="margin-top:0;">Active Staff</h3>
+        <table style="width:100%; border-collapse: collapse;">
+            <thead>
+                <tr style="border-bottom: 2px solid #f1f5f9; text-align: left;">
+                    <th style="padding:12px; font-size: 13px; color: #64748b;">Full Name</th>
+                    <th style="padding:12px; font-size: 13px; color: #64748b;">Role</th>
+                    <th style="padding:12px; font-size: 13px; color: #64748b;">Assigned To</th>
+                    <th style="padding:12px; font-size: 13px; color: #64748b;">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for staff in all_staff %}
+                <tr style="border-bottom: 1px solid #f1f5f9;">
+                    <td style="padding:12px;">
+                        <div style="font-weight: 600;">{{ staff.full_name }}</div>
+                        <div style="font-size: 12px; color: #94a3b8;">{{ staff.email }}</div>
+                    </td>
+                    <td style="padding:12px;">
+                        <span style="background: #f1f5f9; padding: 4px 8px; border-radius: 4px; font-size: 11px; text-transform: uppercase;">
+                            {{ staff.get_role_display }}
+                        </span>
+                    </td>
+                    <td style="padding:12px; font-size: 13px;">
+                        {% if staff.role == 'warehouse' %}
+                            🏢 {{ staff.assigned_warehouse.name }}
+                        {% elif staff.role == 'branch' %}
+                            📍 {{ staff.assigned_branch.name }}
+                        {% endif %}
+                    </td>
+                    <td style="padding:12px;">
+                        <a href="{% url 'delete_staff' staff.id %}" 
+                           onclick="return confirm('Are you sure you want to delete this manager?')"
+                           style="color: #ef4444; font-size: 12px; text-decoration: none; font-weight: 600;">Delete</a>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="4" style="padding:20px; text-align:center; color:#94a3b8;">No managers created yet.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+function toggleLocations() {
+    const role = document.getElementById('roleSelect').value;
+    const wrapper = document.getElementById('locationWrapper');
+    const whList = document.getElementById('warehouseList');
+    const brList = document.getElementById('branchList');
+    const label = document.getElementById('locationLabel');
+
+    if (role) {
+        wrapper.style.display = 'block';
+    } else {
+        wrapper.style.display = 'none';
+    }
+
+    if (role === 'warehouse') {
+        whList.style.display = 'block';
+        brList.style.display = 'none';
+        label.innerText = 'Assign to Warehouse';
+    } else if (role === 'branch') {
+        whList.style.display = 'none';
+        brList.style.display = 'block';
+        label.innerText = 'Assign to Branch';
+    }
+}
+</script>
+{% endblock %}

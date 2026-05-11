@@ -1,0 +1,72 @@
+{% extends "core/base_dashboard.html" %}
+
+{% block title %}Manage Tellers — {{ branch.name }}{% endblock %}
+
+{% block content %}
+<div style="margin-bottom: 24px;">
+    <h1 style="margin:0;">{{ branch.name }}: Tellers</h1>
+    <p style="color: #64748b;">Add and manage return-processing staff for this location.</p>
+</div>
+
+<div style="display: grid; grid-template-columns: 350px 1fr; gap: 24px;">
+    
+    <div class="panel" style="background: white; padding: 24px; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); height: fit-content;">
+        <h3 style="margin-top:0;">Add New Teller</h3>
+        <form method="POST">
+            {% csrf_token %}
+            <div style="margin-bottom:15px;">
+                <label style="display:block; font-size:13px; font-weight:600; color:#64748b; margin-bottom:5px;">Full Name</label>
+                <input type="text" name="full_name" placeholder="e.g. Sarah Smith" required 
+                       style="width:100%; padding:10px; border-radius:8px; border:1px solid #ddd; box-sizing: border-box;">
+            </div>
+            <div style="margin-bottom:15px;">
+                <label style="display:block; font-size:13px; font-weight:600; color:#64748b; margin-bottom:5px;">Email (Login Username)</label>
+                <input type="email" name="email" placeholder="sarah@company.com" required 
+                       style="width:100%; padding:10px; border-radius:8px; border:1px solid #ddd; box-sizing: border-box;">
+            </div>
+            <div style="margin-bottom:20px;">
+                <label style="display:block; font-size:13px; font-weight:600; color:#64748b; margin-bottom:5px;">Temporary Password</label>
+                <input type="password" name="password" placeholder="••••••••" required 
+                       style="width:100%; padding:10px; border-radius:8px; border:1px solid #ddd; box-sizing: border-box;">
+            </div>
+            <button type="submit" style="width:100%; background:#2563eb; color:white; border:none; padding:12px; border-radius:8px; font-weight:600; cursor:pointer;">
+                Register Teller
+            </button>
+        </form>
+    </div>
+
+    <div class="panel" style="background: white; padding: 24px; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+        <h3 style="margin-top:0;">Active Tellers</h3>
+        <table style="width:100%; border-collapse: collapse;">
+            <thead>
+                <tr style="text-align: left; border-bottom: 2px solid #f1f5f9;">
+                    <th style="padding: 12px; font-size: 13px; color: #64748b;">TELLER NAME</th>
+                    <th style="padding: 12px; font-size: 13px; color: #64748b;">EMAIL</th>
+                    <th style="padding: 12px; font-size: 13px; color: #64748b;">JOINED</th>
+                    <th style="padding: 12px; font-size: 13px; color: #64748b; text-align: center;">ACTIONS</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for teller in tellers %}
+                <tr style="border-bottom: 1px solid #f1f5f9;">
+                    <td style="padding: 16px 12px; font-weight: 600;">{{ teller.full_name }}</td>
+                    <td style="padding: 16px 12px; color: #475569;">{{ teller.email }}</td>
+                    <td style="padding: 16px 12px; color: #64748b; font-size: 13px;">{{ teller.date_joined|date:"d M Y" }}</td>
+                    <td style="padding: 16px 12px; text-align: center;">
+                        <a href="{% url 'delete_teller' teller.id %}" 
+                           onclick="return confirm('Are you sure you want to remove this teller?')"
+                           style="color: #ef4444; font-size: 13px; font-weight: 600; text-decoration: none; padding: 6px 12px; border: 1px solid #fee2e2; border-radius: 6px; background: #fef2f2;">
+                            Delete
+                        </a>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="4" style="padding: 40px; text-align: center; color: #94a3b8;">No tellers assigned to this branch yet.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

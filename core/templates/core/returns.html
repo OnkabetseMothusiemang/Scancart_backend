@@ -1,0 +1,56 @@
+
+
+
+
+{% extends "core/base_dashboard.html" %}
+
+{% block title %}Customer Returns — Best Store{% endblock %}
+
+{% block content %}
+
+<div class="panel">
+
+  <h3>Return Requests</h3>
+
+  {% if returns %}
+
+      <tbody>
+
+        {% for r in returns %}
+
+        <tr>
+
+          <td class="small">{{ r.order_id }}</td>
+
+          <td>{{ r.product }}</td>
+
+          <td class="small">{{ r.reason }}</td>
+
+          <td>{{ r.status }}</td>
+
+          <td>
+
+            <form method="post" style="display:inline;">
+
+              {% csrf_token %}
+
+              <button name="approve_return" type="submit">Approve</button>
+
+            </form>
+
+          </td>
+
+        {% endfor %}
+
+      </tbody>
+
+    </table>
+
+    <div class="small" style="padding:14px 0;">No return requests.</div>
+
+  {% endif %}
+
+</div>
+
+{% endblock %}
+

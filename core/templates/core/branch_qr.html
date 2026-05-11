@@ -1,0 +1,71 @@
+{% extends "core/base_dashboard.html" %}
+
+{% block content %}
+<style>
+    .qr-wrapper {
+        min-height: 75vh;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+
+    .qr-card {
+        background: #ffffff;
+        border-radius: 16px;
+        padding: 40px;
+        width: 100%;
+        max-width: 500px;
+        text-align: center;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+        border: 1px solid #f0f0f0;
+    }
+
+    .qr-title {
+        font-weight: 600;
+        margin-bottom: 10px;
+    }
+
+    .qr-subtitle {
+        font-size: 14px;
+        color: #6c757d;
+        margin-bottom: 30px;
+    }
+
+    .qr-image {
+        width: 250px;
+        padding: 15px;
+        background: #f8f9fa;
+        border-radius: 12px;
+        margin-bottom: 25px;
+    }
+
+    .download-btn {
+        padding: 10px 25px;
+        border-radius: 30px;
+        font-weight: 500;
+    }
+</style>
+
+<div class="qr-wrapper">
+    <div class="qr-card">
+
+        <h3 class="qr-title">Branch Entrance QR Code</h3>
+        <p class="qr-subtitle">
+            Customers must scan this QR code to access verified cart.
+        </p>
+
+        <img src="data:image/png;base64,{{ qr_base64 }}" 
+            alt="Branch QR Code"
+            class="qr-image">
+
+        <div>
+            <a href="{% url 'generate_branch_qr' %}" 
+               class="btn btn-primary download-btn">
+               ⬇ Download QR Code
+            </a>
+        </div>
+
+    </div>
+</div>
+
+{% endblock %}

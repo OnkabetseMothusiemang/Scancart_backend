@@ -1,0 +1,83 @@
+{% extends "core/base_dashboard.html" %}
+
+{% block title %}Allocate Stock — {{ user.assigned_warehouse.name }}{% endblock %}
+
+{% block content %}
+<div style="margin-bottom: 24px;">
+    <h1>Stock Allocation</h1>
+    <p style="color: var(--muted);">Transfer stock from <strong>{{ user.assigned_warehouse.name }}</strong> to retail branches.</p>
+</div>
+
+<div style="display: grid; grid-template-columns: 1fr 450px; gap: 24px;">
+    <!-- ------------------ INVENTORY & SELECT PRODUCTS ------------------ -->
+    <div class="panel">
+        <h3 style="margin-top:0;">Select Products to Transfer</h3>
+        <form method="POST">
+            {% csrf_token %}
+            
+            {% if inventory %}
+            <table style="width:100%; border-collapse: collapse; margin-bottom: 15px;">
+                <thead>
+                    <tr style="text-align:left; border-bottom:2px solid #f1f5f9;">
+                        <th style="padding:12px; color:#64748b;">Select</th>
+                        <th style="padding:12px; color:#64748b;">Product</th>
+                        <th style="padding:12px; color:#64748b; text-align:right;">Available</th>
+                        <th style="padding:12px; color:#64748b; text-align:right;">Quantity</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in inventory %}
+                    <tr style="border-bottom:1px solid #f1f5f9;">
+                        <td style="padding:12px;">
+                            <input type="checkbox" name="product_ids" value="{{ item.product.id }}">
+                        </td>
+                        <td style="padding:12px;"><strong>{{ item.product.name }}</strong></td>
+                        <td style="padding:12px; text-align:right;">{{ item.quantity }}</td>
+                        <td style="padding:12px; text-align:right;">
+                            <input type="number" name="quantity_{{ item.product.id }}" min="1" max="{{ item.quantity }}" style="width:70px; padding:5px; border-radius:5px; border:1px solid #ddd;">
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <p>No products available in this warehouse.</p>
+            {% endif %}
+
+            <div style="margin-bottom:15px;">
+                <label style="display:block; font-size:13px; font-weight:600; color:#64748b; margin-bottom:5px;">Destination Branch</label>
+                <select name="branch_id" required style="width:100%; padding:10px; border-radius:8px; border:1px solid #ddd;">
+                    {% for br in branches %}
+                        <option value="{{ br.id }}">{{ br.name }} ({{ br.town }})</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <button type="submit" style="width:100%; background:var(--accent); color:white; border:none; padding:12px; border-radius:8px; font-weight:600; cursor:pointer;">
+                Confirm Transfer
+            </button>
+        </form>
+    </div>
+
+    <!-- ------------------ WAREHOUSE STOCK LEVELS ------------------ -->
+    <div class="panel">
+        <h3 style="margin-top:0;">Current Warehouse Stock</h3>
+        <table style="width:100%; border-collapse: collapse;">
+            <thead>
+                <tr style="text-align:left; border-bottom:2px solid #f1f5f9;">
+                    <th style="padding:12px; color:#64748b;">Product</th>
+                    <th style="padding:12px; color:#64748b; text-align:right;">In Stock</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in inventory %}
+                <tr style="border-bottom:1px solid #f1f5f9;">
+                    <td style="padding:12px;"><strong>{{ item.product.name }}</strong></td>
+                    <td style="padding:12px; text-align:right;">{{ item.quantity }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

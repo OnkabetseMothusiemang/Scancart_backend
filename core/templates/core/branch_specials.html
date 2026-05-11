@@ -1,0 +1,82 @@
+{% extends "core/base_dashboard.html" %}
+
+{% block content %}
+<div style="margin-bottom: 24px;">
+    <h1>Store Specials & Discounts</h1>
+    <p>Set temporary price drops for <strong>{{ user.assigned_branch.name }}</strong></p>
+</div>
+
+<!-- Alphabet Filter -->
+<div style="margin-bottom: 15px;">
+    {% for letter in "ABCDEFGHIJKLMNOPQRSTUVWXYZ" %}
+        <button type="button" class="alphabet-btn" data-letter="{{ letter }}" style="margin:2px; padding:6px 10px; border:none; border-radius:4px; background:#f1f5f9; cursor:pointer;">{{ letter }}</button>
+    {% endfor %}
+    <button type="button" class="alphabet-btn" data-letter="ALL" style="margin:2px; padding:6px 10px; border:none; border-radius:4px; background:#64748b; color:white; cursor:pointer;">All</button>
+</div>
+
+<form method="POST">
+    {% csrf_token %}
+    <div class="panel">
+        <table id="specialsTable" style="width:100%; border-collapse: collapse;">
+            <thead>
+                <tr style="text-align:left; border-bottom:2px solid #f1f5f9;">
+                    <th style="padding:12px;">Select</th>
+                    <th style="padding:12px;">Product</th>
+                    <th style="padding:12px;">Normal Price</th>
+                    <th style="padding:12px;">Special Price</th>
+                    <th style="padding:12px;">Expiry Date</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in inventory %}
+                <tr style="border-bottom:1px solid #f1f5f9;">
+                    <td style="padding:12px;">
+                        <input type="checkbox" name="stock_ids" value="{{ item.id }}">
+                    </td>
+                    <td style="padding:12px;" class="product-name"><strong>{{ item.product.name }}</strong></td>
+                    <td style="padding:12px;">R {{ item.product.price }}</td>
+                    <td style="padding:12px;">
+                        <input type="number" step="0.01" name="special_price_{{ item.id }}" value="{{ item.special_price|default:'' }}" placeholder="0.00" style="padding:5px; width:80px; border-radius:4px; border:1px solid #ddd;">
+                    </td>
+                    <td style="padding:12px;">
+                        <input type="date" name="expiry_date_{{ item.id }}" value="{{ item.special_expiry|date:'Y-m-d' }}" style="padding:5px; border-radius:4px; border:1px solid #ddd;">
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        <div style="margin-top:15px;">
+            <button type="submit" style="background:var(--success); color:white; border:none; padding:10px 16px; border-radius:6px; cursor:pointer; font-weight:600;">
+                Update Selected Specials
+            </button>
+        </div>
+    </div>
+</form>
+
+<!-- JS for Alphabet Filter Only -->
+<script>
+    const alphabetButtons = document.querySelectorAll('.alphabet-btn');
+    const table = document.getElementById('specialsTable');
+    const rows = table.getElementsByTagName('tr');
+
+    let currentLetter = '';
+    function filterRows(alphabetLetter = '') {
+        for (let i = 1; i < rows.length; i++) { // skip header
+            const productCell = rows[i].getElementsByClassName('product-name')[0];
+            if (!productCell) continue;
+            const text = productCell.textContent || productCell.innerText;
+            rows[i].style.display = (alphabetLetter === 'ALL' || text.charAt(0).toUpperCase() === alphabetLetter) ? '' : 'none';
+        }
+    }
+
+    alphabetButtons.forEach(btn => {
+        btn.addEventListener('click', () => {
+            currentLetter = btn.getAttribute('data-letter');
+            filterRows(currentLetter);
+        });
+    });
+
+    // Initialize to show all
+    filterRows('ALL');
+</script>
+{% endblock %}

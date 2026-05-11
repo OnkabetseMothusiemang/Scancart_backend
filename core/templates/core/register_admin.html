@@ -1,0 +1,218 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Authentication</title>
+
+    <link rel="stylesheet" type="text/css" href="{% static 'admin/css/base.css' %}">
+    <link rel="stylesheet" type="text/css" href="{% static 'admin/css/forms.css' %}">
+    <link rel="stylesheet" type="text/css" href="{% static 'admin/css/widgets.css' %}">
+    <link rel="stylesheet" type="text/css" href="{% static 'admin/css/responsive.css' %}">
+
+    <style>
+        body { background: #f8f8f8; margin: 0; }
+
+        .navbar {
+            background: #417690;
+            color: #fff;
+            padding: 12px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .navbar a {
+            color: #fff;
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .page-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: calc(100vh - 50px);
+        }
+
+        .auth-container {
+            background: #fff;
+            width: 100%;
+            max-width: 420px;
+            padding: 25px;
+            border-radius: 8px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+        }
+
+        .tabs {
+            display: flex;
+            margin-bottom: 20px;
+        }
+
+        .tabs button {
+            flex: 1;
+            padding: 10px;
+            border: none;
+            background: #e4e4e4;
+            cursor: pointer;
+            font-weight: 600;
+        }
+
+        .tabs button.active {
+            background: #417690;
+            color: #fff;
+        }
+
+        .form-section { display: none; }
+        .form-section.active { display: block; }
+
+        input[type="text"], input[type="email"], input[type="password"] {
+            width: 100%;
+            padding: 8px;
+            margin-bottom: 12px;
+            border-radius: 4px;
+            border: 1px solid #bbb;
+        }
+
+        .submit-row {
+            text-align: center;
+        }
+
+        .submit-row input {
+            background: #417690;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+
+        .messages { margin-bottom: 10px; }
+        .messages .error { color: red; }
+        .messages .success { color: green; }
+
+        .show-password {
+            margin-bottom: 12px;
+            font-size: 14px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="navbar">
+    <div>Onkabetse</div>
+    <a href="/admin/">Admin</a>
+</div>
+
+<div class="page-container">
+    <div class="auth-container">
+
+        {% if messages %}
+            <div class="messages">
+                {% for message in messages %}
+                    <div class="{{ message.tags }}">{{ message }}</div>
+                {% endfor %}
+            </div>
+        {% endif %}
+
+        <div class="tabs">
+            <button class="tab-btn active" data-target="login">Login</button>
+            <button class="tab-btn" data-target="register">Register Company</button>
+        </div>
+
+        <!-- LOGIN -->
+        <div id="login" class="form-section active">
+            <h3 style="text-align:center;">Login</h3>
+
+            <form method="POST" action="?action=login">
+                {% csrf_token %}
+
+                <label>Email</label>
+                <input type="text" name="email" required>
+
+                <label>Password</label>
+                <input type="password" name="password" id="login-password" required>
+
+                <div class="show-password">
+                    <input type="checkbox" id="show-login-password">
+                    <label for="show-login-password">Show Password</label>
+                </div>
+
+                <div class="submit-row">
+                    <input type="submit" value="Login">
+                </div>
+
+                <div style="text-align:right;">
+                    <a href="{% url 'password_reset' %}">Forgot Password?</a>
+                </div>
+            </form>
+        </div>
+
+        <!-- REGISTER COMPANY -->
+        <div id="register" class="form-section">
+            <h3 style="text-align:center;">Register Company</h3>
+
+            <form method="POST" action="?action=register">
+                {% csrf_token %}
+
+                {{ form.non_field_errors }}
+
+                <label>Company Name</label>
+                <input type="text" name="company_name" required>
+
+                <label>Email</label>
+                <input type="email" name="email" required>
+
+                <label>Password</label>
+                <input type="password" name="password1" id="register-password1" required>
+
+                <label>Confirm Password</label>
+                <input type="password" name="password2" id="register-password2" required>
+
+                <div class="show-password">
+                    <input type="checkbox" id="show-register-passwords">
+                    <label for="show-register-passwords">Show Passwords</label>
+                </div>
+
+                <div class="submit-row">
+                    <input type="submit" value="Register">
+                </div>
+            </form>
+        </div>
+
+    </div>
+</div>
+
+<script>
+document.querySelectorAll(".tab-btn").forEach(btn => {
+    btn.addEventListener("click", () => {
+        document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
+        document.querySelectorAll(".form-section").forEach(s => s.classList.remove("active"));
+        btn.classList.add("active");
+        document.getElementById(btn.dataset.target).classList.add("active");
+    });
+});
+
+// Show/hide password for login
+document.getElementById("show-login-password").addEventListener("change", function() {
+    const pw = document.getElementById("login-password");
+    pw.type = this.checked ? "text" : "password";
+});
+
+// Show/hide password for register
+document.getElementById("show-register-passwords").addEventListener("change", function() {
+    const pw1 = document.getElementById("register-password1");
+    const pw2 = document.getElementById("register-password2");
+    pw1.type = this.checked ? "text" : "password";
+    pw2.type = this.checked ? "text" : "password";
+});
+</script>
+
+</body>
+</html>
